@@ -24,6 +24,7 @@
             flex-direction: column;
             height: 100vh;
             box-sizing: border-box;
+            overflow: hidden;
         }
         header {
             background: linear-gradient(90deg, #0b0c10 0%, #1a1a2e 50%, #0b0c10 100%);
@@ -32,14 +33,26 @@
             border-bottom: 2px solid var(--neon-purple);
             box-shadow: 0 0 15px rgba(138, 43, 226, 0.4);
             position: relative;
+            z-index: 10;
         }
-        h1 { margin: 0; font-size: 18px; color: #fff; text-shadow: 0 0 10px var(--neon-blue); }
+        h1 { margin: 0; font-size: 18px; color: #fff; text-shadow: 0 0 10px var(--neon-blue); text-transform: uppercase; letter-spacing: 1px;}
         .status-bar {
             font-size: 14px;
             color: var(--neon-blue);
             margin-top: 5px;
             font-weight: bold;
+            transition: color 0.3s;
         }
+        .status-bar.urgent {
+            color: var(--blood-red);
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { text-shadow: 0 0 5px var(--blood-red); }
+            50% { text-shadow: 0 0 15px var(--blood-red); }
+            100% { text-shadow: 0 0 5px var(--blood-red); }
+        }
+        
         .btn-role {
             position: absolute;
             top: 10px;
@@ -51,8 +64,32 @@
             border-radius: 10px;
             cursor: pointer;
             font-size: 12px;
+            text-transform: uppercase;
         }
-        
+
+        /* Список игроков сверху */
+        #players-list {
+            display: flex;
+            overflow-x: auto;
+            padding: 10px;
+            background: #11141c;
+            border-bottom: 1px solid #333;
+            gap: 10px;
+        }
+        .player-badge {
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-blue);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .player-badge.dead {
+            border-color: #555;
+            color: #555;
+            text-decoration: line-through;
+        }
+
         #chat-container {
             flex: 1;
             padding: 15px;
@@ -68,7 +105,10 @@
             max-width: 80%;
             word-wrap: break-word;
             border-left: 3px solid var(--neon-blue);
+            animation: fadeIn 0.3s ease-in-out;
         }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        
         .message.self {
             align-self: flex-end;
             background-color: #2b2b40;
@@ -80,6 +120,7 @@
             color: var(--neon-blue);
             display: block;
             margin-bottom: 3px;
+            font-weight: bold;
         }
         .message.self span.author { color: var(--neon-purple); }
 
@@ -88,6 +129,7 @@
             padding: 15px;
             background-color: var(--panel-bg);
             border-top: 1px solid #333;
+            z-index: 10;
         }
         input[type="text"] {
             flex: 1;
@@ -97,11 +139,11 @@
             padding: 12px;
             border-radius: 20px;
             outline: none;
+            transition: 0.3s;
         }
-        input:disabled {
-            border-color: #555;
-            background: #111;
-        }
+        input:focus { box-shadow: 0 0 10px rgba(69, 162, 158, 0.5); }
+        input:disabled { border-color: #555; background: #111; }
+        
         button.send-btn {
             background: transparent;
             border: 2px solid var(--neon-purple);
@@ -110,13 +152,45 @@
             padding: 10px 20px;
             border-radius: 20px;
             cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
         }
-        button.send-btn:disabled {
-            border-color: #555;
-            color: #555;
-        }
+        button.send-btn:disabled { border-color: #555; color: #555; }
 
-        /* Модальное окно с описанием роли */
+        /* Интерактивная панель действий (Вариант А) */
+        #action-panel {
+            display: none;
+            flex-direction: column;
+            padding: 15px;
+            background: #1a1a2e;
+            border-top: 2px solid var(--neon-purple);
+            box-shadow: 0 -5px 15px rgba(138, 43, 226, 0.3);
+            z-index: 20;
+        }
+        #action-prompt {
+            text-align: center;
+            color: var(--neon-purple);
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .btn-target {
+            background: transparent;
+            border: 1px solid var(--neon-blue);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-target:active { background: var(--neon-blue); color: #000; }
+
         #role-modal {
             display: none;
             position: absolute;
@@ -132,36 +206,47 @@
             z-index: 100;
             text-align: center;
         }
-        #role-modal h2 { margin-top: 0; color: var(--neon-blue); }
+        #role-modal h2 { margin-top: 0; color: var(--neon-blue); text-transform: uppercase;}
         .close-modal {
             background: var(--neon-purple);
             border: none;
             color: white;
-            padding: 8px 16px;
+            padding: 10px 20px;
             border-radius: 10px;
             margin-top: 15px;
             cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1 id="room-title">🐉 Комната Мафии</h1>
+        <h1 id="room-title">Логово Мафии</h1>
         <div class="status-bar" id="phase-status">Ожидание игроков...</div>
         <button class="btn-role" onclick="toggleRoleModal()">Моя Роль</button>
     </header>
 
+    <div id="players-list">
+        <!-- Сюда динамически добавляются плашки игроков -->
+    </div>
+
     <div id="role-modal">
         <h2 id="role-name">Загрузка...</h2>
-        <p id="role-desc">Ожидайте раздачу ролей.</p>
-        <button class="close-modal" onclick="toggleRoleModal()">Понятно</button>
+        <p id="role-desc">Ожидайте распределения ролей.</p>
+        <button class="close-modal" onclick="toggleRoleModal()">Закрыть</button>
     </div>
 
     <div id="chat-container"></div>
 
+    <div id="action-panel">
+        <div id="action-prompt">Сделайте выбор:</div>
+        <div class="action-buttons" id="action-buttons-container"></div>
+    </div>
+
     <div id="input-area">
-        <input type="text" id="msg-input" placeholder="Написать в чат..." autocomplete="off">
+        <input type="text" id="msg-input" placeholder="Написать сообщение..." autocomplete="off">
         <button class="send-btn" id="send-btn" onclick="sendMessage()">Отправить</button>
     </div>
 
@@ -169,7 +254,7 @@
         const tg = window.Telegram.WebApp;
         tg.expand(); 
         
-        const user = tg.initDataUnsafe?.user || { first_name: "Дракон_" + Math.floor(Math.random() * 100) };
+        const user = tg.initDataUnsafe?.user || { first_name: "Игрок_" + Math.floor(Math.random() * 100) };
         const urlParams = new URLSearchParams(window.location.search);
         const roomId = urlParams.get('room') || 'test';
         
@@ -182,9 +267,13 @@
         const ws = new WebSocket(wsUrl);
 
         const chatContainer = document.getElementById('chat-container');
+        const inputArea = document.getElementById('input-area');
         const input = document.getElementById('msg-input');
         const sendBtn = document.getElementById('send-btn');
         const phaseStatus = document.getElementById('phase-status');
+        const actionPanel = document.getElementById('action-panel');
+        const actionButtonsContainer = document.getElementById('action-buttons-container');
+        const actionPrompt = document.getElementById('action-prompt');
 
         ws.onopen = () => {
             ws.send(JSON.stringify({ name: user.first_name }));
@@ -200,6 +289,9 @@
                 const isSelf = parsed.data.sender === user.first_name;
                 addChatMessage(parsed.data.sender, parsed.data.text, isSelf);
             }
+            else if (parsed.event === "update_players") {
+                renderPlayersList(parsed.players);
+            }
             else if (parsed.event === "role_assigned") {
                 document.getElementById('role-name').innerText = parsed.role;
                 document.getElementById('role-desc').innerText = parsed.description;
@@ -208,17 +300,57 @@
             else if (parsed.event === "phase_changed") {
                 currentPhase = parsed.phase;
                 phaseTimeLeft = parsed.duration;
+                actionPanel.style.display = "none"; // Прячем панель действий в начале фазы
+                inputArea.style.display = (currentPhase === "Ночь") ? "none" : "flex"; // Ночью прячем чат
                 startTimer();
-                addSystemMessage(`🌙 Фаза сменилась на: ${currentPhase}`);
+                addSystemMessage(`Текущая фаза: ${currentPhase.toUpperCase()}`);
+            }
+            else if (parsed.event === "action_required") {
+                showActionPanel(parsed.prompt, parsed.options);
             }
             else if (parsed.event === "you_died") {
                 isDead = true;
                 input.disabled = true;
                 sendBtn.disabled = true;
-                input.placeholder = "Вы мертвы...";
+                input.placeholder = "Вы выбыли из игры.";
+                actionPanel.style.display = "none";
                 document.body.style.border = "4px solid var(--blood-red)";
             }
         };
+
+        function renderPlayersList(players) {
+            const listDiv = document.getElementById('players-list');
+            listDiv.innerHTML = '';
+            players.forEach(p => {
+                const badge = document.createElement('div');
+                badge.className = `player-badge ${p.is_dead ? 'dead' : ''}`;
+                badge.innerText = p.name;
+                listDiv.appendChild(badge);
+            });
+        }
+
+        function showActionPanel(promptText, options) {
+            if (isDead) return;
+            actionPrompt.innerText = promptText;
+            actionButtonsContainer.innerHTML = '';
+            
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-target';
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    ws.send(JSON.stringify({
+                        action: "player_choice",
+                        sender: user.first_name,
+                        target: opt
+                    }));
+                    actionPanel.style.display = "none"; // Прячем после выбора
+                };
+                actionButtonsContainer.appendChild(btn);
+            });
+            
+            actionPanel.style.display = "flex";
+        }
 
         function startTimer() {
             clearInterval(timerInterval);
@@ -232,6 +364,11 @@
 
         function updatePhaseUI() {
             phaseStatus.innerText = `${currentPhase} (Осталось: ${phaseTimeLeft} сек)`;
+            if (phaseTimeLeft <= 10 && phaseTimeLeft > 0) {
+                phaseStatus.classList.add('urgent');
+            } else {
+                phaseStatus.classList.remove('urgent');
+            }
         }
 
         function toggleRoleModal() {
@@ -240,7 +377,7 @@
         }
 
         function sendMessage() {
-            if (isDead) return;
+            if (isDead || currentPhase === "Ночь") return;
             const text = input.value.trim();
             if (text && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
@@ -270,6 +407,8 @@
             div.style.color = "var(--neon-purple)";
             div.style.fontSize = "12px";
             div.style.margin = "10px 0";
+            div.style.textTransform = "uppercase";
+            div.style.letterSpacing = "1px";
             div.innerText = text;
             chatContainer.appendChild(div);
             chatContainer.scrollTop = chatContainer.scrollHeight;
