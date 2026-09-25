@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mafia: Night Fury Edition</title>
+    <!-- Подключение библиотеки Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Подключение современных игровых шрифтов -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Russo+One&display=swap" rel="stylesheet">
     <style>
+        /* Цветовая палитра */
         :root {
             --bg-color: #0b0c10;
             --panel-bg: #1f2833;
@@ -15,6 +18,7 @@
             --neon-purple: #8a2be2;
             --blood-red: #c90000;
         }
+        
         body {
             background-color: var(--bg-color);
             color: var(--text-main);
@@ -27,6 +31,7 @@
             box-sizing: border-box;
             overflow: hidden;
         }
+
         header {
             background: linear-gradient(90deg, #0b0c10 0%, #1a1a2e 50%, #0b0c10 100%);
             padding: 10px;
@@ -322,6 +327,7 @@
         let timerInterval = null;
         let isDead = false;
 
+        // ВАЖНО: Проверь этот адрес! Он должен вести на твой FastAPI сервер (VPS)
         const wsUrl = `wss://599c4d87e8fafa.lhr.life/ws/mafia/${roomId}`;
         const ws = new WebSocket(wsUrl);
 
