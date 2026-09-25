@@ -6,6 +6,8 @@
     <title>Mafia: Night Fury Edition</title>
     <!-- Подключение библиотеки Telegram для работы с данными пользователя и окном приложения -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Подключение современных игровых шрифтов от Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Russo+One&display=swap" rel="stylesheet">
     <style>
         /* Цветовая палитра в стиле Ночной фурии */
         :root {
@@ -212,33 +214,73 @@
         }
         .btn-target:active { background: var(--neon-blue); color: #000; }
 
-        /* Всплывающее окно с описанием роли */
+        /* =========================================
+           ОБНОВЛЕННЫЙ ДИЗАЙН КАРТОЧКИ РОЛЕЙ
+           ========================================= */
         #role-modal {
-            display: none;
+            display: none; 
             position: absolute;
-            top: 20%;
-            left: 10%;
-            width: 80%;
-            background: #1a1a2e;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); 
+            width: 85%;
+            max-width: 320px; 
+            background: linear-gradient(145deg, #11141c, #1a1a2e); 
             border: 2px solid var(--neon-purple);
-            border-radius: 15px;
-            padding: 20px;
+            border-radius: 20px;
+            padding: 30px 20px;
             box-sizing: border-box;
-            box-shadow: 0 0 20px rgba(138, 43, 226, 0.7);
+            box-shadow: 0 0 30px rgba(138, 43, 226, 0.5), inset 0 0 15px rgba(69, 162, 158, 0.1);
             z-index: 100;
             text-align: center;
+            font-family: 'Montserrat', sans-serif; 
         }
-        #role-modal h2 { margin-top: 0; color: var(--neon-blue); text-transform: uppercase;}
+
+        .role-game-title {
+            color: var(--neon-purple);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 4px; 
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        #role-modal h2 { 
+            margin: 0 0 15px 0; 
+            color: #ffffff; 
+            font-family: 'Russo One', sans-serif; 
+            font-size: 32px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue); 
+        }
+
+        #role-desc {
+            color: #c5c6c7;
+            font-size: 14px;
+            line-height: 1.6; 
+            margin-bottom: 30px;
+        }
+
         .close-modal {
-            background: var(--neon-purple);
-            border: none;
-            color: white;
-            padding: 10px 20px;
-            border-radius: 10px;
-            margin-top: 15px;
+            background: transparent;
+            border: 2px solid var(--neon-blue);
+            color: #ffffff;
+            padding: 12px 35px;
+            border-radius: 25px; 
+            font-size: 14px;
+            font-family: 'Russo One', sans-serif; 
             cursor: pointer;
             text-transform: uppercase;
-            font-weight: bold;
+            letter-spacing: 1px;
+            transition: all 0.3s ease; 
+            box-shadow: 0 0 10px rgba(69, 162, 158, 0.3);
+        }
+
+        .close-modal:hover, .close-modal:active {
+            background: var(--neon-blue);
+            color: #0b0c10;
+            box-shadow: 0 0 20px rgba(69, 162, 158, 0.8);
         }
     </style>
 </head>
@@ -253,10 +295,12 @@
     <!-- Сюда скрипт динамически добавляет плашки с именами игроков -->
     <div id="players-list"></div>
 
+    <!-- Всплывающее окно с описанием роли -->
     <div id="role-modal">
+        <div class="role-game-title">Драконья мафия</div>
         <h2 id="role-name">Загрузка...</h2>
         <p id="role-desc">Ожидайте распределения ролей.</p>
-        <button class="close-modal" onclick="toggleRoleModal()">Закрыть</button>
+        <button class="close-modal" onclick="toggleRoleModal()">Я ГОТОВ</button>
     </div>
 
     <!-- Здесь появляются все сообщения -->
@@ -281,7 +325,7 @@
         // Получение имени пользователя из данных Telegram
         const user = tg.initDataUnsafe?.user || { first_name: "Игрок_" + Math.floor(Math.random() * 100) };
         
-        // Получение ID комнаты. tg.initDataUnsafe?.start_param используется при запуске через Direct Link.
+        // Получение ID комнаты через Direct Link Telegram
         const urlParams = new URLSearchParams(window.location.search);
         const roomId = tg.initDataUnsafe?.start_param || urlParams.get('room') || 'test';
         

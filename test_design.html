@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Концепт Карточки Роли</title>
+    <style>
+        /* Общие настройки страницы (темный фон) */
+        body {
+            background-color: #0b0c10; /* Глубокий черный цвет */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Настройки самой карточки */
+        .role-card {
+            background: linear-gradient(145deg, #1a1a2e, #11141c); /* Плавный переход сине-черных оттенков */
+            border: 2px solid #8a2be2; /* Неоновая фиолетовая рамка */
+            border-radius: 20px; /* Закругленные углы */
+            padding: 30px;
+            text-align: center;
+            width: 280px;
+            /* Красивое неоновое свечение вокруг карточки */
+            box-shadow: 0 0 20px rgba(138, 43, 226, 0.5), inset 0 0 15px rgba(69, 162, 158, 0.2);
+            /* Анимация плавного появления */
+            animation: float 3s ease-in-out infinite;
+        }
+
+        /* Анимация "парения" карточки вверх-вниз */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        /* Стиль для названия роли */
+        .role-title {
+            color: #fff;
+            font-size: 28px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            /* Свечение текста (голубой неон) */
+            text-shadow: 0 0 10px #45a29e, 0 0 20px #45a29e;
+        }
+
+        /* Стиль для описания роли */
+        .role-description {
+            color: #c5c6c7;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 25px;
+        }
+
+        /* Стиль для кнопки подтверждения */
+        .ready-btn {
+            background: transparent;
+            border: 2px solid #45a29e; /* Голубая рамка */
+            color: #fff;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease; /* Плавное изменение при наведении */
+            box-shadow: 0 0 10px rgba(69, 162, 158, 0.3);
+        }
+
+        /* Эффект при наведении на кнопку */
+        .ready-btn:hover {
+            background: #45a29e; /* Кнопка заливается голубым */
+            color: #0b0c10;      /* Текст становится темным */
+            box-shadow: 0 0 20px rgba(69, 162, 158, 0.8); /* Усиливаем свечение */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HTML-структура нашей карточки -->
+    <div class="role-card">
+        <div class="role-title">Мафия</div>
+        <div class="role-description">
+            Город засыпает. Твоя цель — устранить всех мирных драконов. Ночью выбирай жертву, а днем не выдавай себя.
+        </div>
+        <button class="ready-btn">Я готов</button>
+    </div>
+
+</body>
+</html>
