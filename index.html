@@ -74,9 +74,8 @@
             text-transform: uppercase;
         }
 
-        /* Кнопка запуска игры для админа */
         #btn-start-game {
-            display: none; /* Скрыта у всех по умолчанию */
+            display: none; 
             background: var(--neon-purple);
             color: #fff;
             border: none;
@@ -216,7 +215,6 @@
         }
         .btn-target:active { background: var(--neon-blue); color: #000; }
 
-        /* Карточка Роли */
         #role-modal {
             display: none; 
             position: absolute;
@@ -289,7 +287,6 @@
 
     <div id="players-list"></div>
     
-    <!-- Кнопка админа -->
     <button id="btn-start-game">Начать игру (Админ)</button>
 
     <div id="role-modal">
@@ -315,7 +312,6 @@
         const tg = window.Telegram.WebApp;
         tg.expand(); 
         
-        // Надежное получение ID пользователя для починки чата
         const userId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : String(Math.floor(Math.random() * 100000));
         const user = tg.initDataUnsafe?.user || { first_name: "Игрок_" + userId.slice(-4) };
         const urlParams = new URLSearchParams(window.location.search);
@@ -340,7 +336,6 @@
         const btnStartGame = document.getElementById('btn-start-game');
 
         ws.onopen = () => {
-            // Передаем action: join и наш уникальный user_id
             ws.send(JSON.stringify({ action: "join", user_id: userId, name: user.first_name }));
         };
 
@@ -351,11 +346,9 @@
                 addSystemMessage(parsed.message);
             } 
             else if (parsed.event === "is_admin") {
-                // Сервер сообщил, что мы админ комнаты
                 btnStartGame.style.display = 'block';
             }
             else if (parsed.event === "update" && parsed.data.action === "chat") {
-                // Сверяем сообщения по ID, чтобы чат работал идеально
                 const isSelf = parsed.data.sender_id === userId;
                 addChatMessage(parsed.data.sender_name, parsed.data.text, isSelf);
             }
@@ -368,12 +361,12 @@
             else if (parsed.event === "role_assigned") {
                 document.getElementById('role-name').innerText = parsed.role;
                 document.getElementById('role-desc').innerText = parsed.description;
-                document.getElementById('role-modal').style.display = 'block'; // Принудительно показываем карточку
+                document.getElementById('role-modal').style.display = 'block'; 
             }
             else if (parsed.event === "phase_changed") {
                 currentPhase = parsed.phase;
                 phaseTimeLeft = parsed.duration;
-                btnStartGame.style.display = 'none'; // Прячем кнопку старта
+                btnStartGame.style.display = 'none'; 
                 actionPanel.style.display = "none"; 
                 inputArea.style.display = (currentPhase === "Ночь") ? "none" : "flex"; 
                 startTimer();
@@ -392,7 +385,6 @@
             }
         };
 
-        // Запуск игры по нажатию на кнопку
         btnStartGame.onclick = () => {
             ws.send(JSON.stringify({ action: "start_game", user_id: userId }));
         };
