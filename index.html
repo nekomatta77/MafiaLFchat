@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mafia: Night Fury Edition</title>
-    <!-- Подключение библиотеки Telegram для работы с окном приложения -->
+    <!-- Подключение библиотеки Telegram -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Игровые шрифты -->
+    <!-- Игровые шрифты (Russo One и Montserrat) -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Russo+One&display=swap" rel="stylesheet">
     <style>
         /* Основная цветовая схема */
@@ -236,7 +236,7 @@
         }
         .btn-target:active { background: var(--neon-blue); color: #000; }
 
-        /* Карточка Роли */
+        /* ОБНОВЛЕННАЯ КАРТОЧКА РОЛИ С КРУТЫМ ДИЗАЙНОМ */
         #role-modal {
             display: none; 
             position: absolute;
@@ -340,7 +340,7 @@
         const tg = window.Telegram.WebApp;
         tg.expand(); 
         
-        // Получаем ID пользователя из Telegram
+        // Надежное получение ID пользователя для починки чата
         const userId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : String(Math.floor(Math.random() * 100000));
         const user = tg.initDataUnsafe?.user || { first_name: "Игрок_" + userId.slice(-4) };
         const urlParams = new URLSearchParams(window.location.search);
@@ -353,7 +353,7 @@
         let timerInterval = null;
         let isDead = false;
 
-        // Строка подключения к серверу (VPS). Оставлена твоя ссылка lhr.life
+        // Строка подключения к серверу
         const wsUrl = `wss://599c4d87e8fafa.lhr.life/ws/mafia/${roomId}`;
         const ws = new WebSocket(wsUrl);
 

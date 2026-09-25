@@ -2,93 +2,528 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Концепт Карточки Роли</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mafia: Night Fury Edition</title>
+    <!-- Подключение библиотеки Telegram -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Игровые шрифты (Russo One и Montserrat) -->
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Russo+One&display=swap" rel="stylesheet">
     <style>
-        /* Общие настройки страницы (темный фон) */
+        /* Основная цветовая схема */
+        :root {
+            --bg-color: #0b0c10;
+            --panel-bg: #1f2833;
+            --text-main: #c5c6c7;
+            --neon-blue: #45a29e;
+            --neon-purple: #8a2be2;
+            --blood-red: #c90000;
+        }
+        
         body {
-            background-color: #0b0c10; /* Глубокий черный цвет */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
         }
 
-        /* Настройки самой карточки */
-        .role-card {
-            background: linear-gradient(145deg, #1a1a2e, #11141c); /* Плавный переход сине-черных оттенков */
-            border: 2px solid #8a2be2; /* Неоновая фиолетовая рамка */
-            border-radius: 20px; /* Закругленные углы */
-            padding: 30px;
+        /* Верхняя панель */
+        header {
+            background: linear-gradient(90deg, #0b0c10 0%, #1a1a2e 50%, #0b0c10 100%);
+            padding: 10px;
             text-align: center;
-            width: 280px;
-            /* Красивое неоновое свечение вокруг карточки */
-            box-shadow: 0 0 20px rgba(138, 43, 226, 0.5), inset 0 0 15px rgba(69, 162, 158, 0.2);
-            /* Анимация плавного появления */
-            animation: float 3s ease-in-out infinite;
+            border-bottom: 2px solid var(--neon-purple);
+            box-shadow: 0 0 15px rgba(138, 43, 226, 0.4);
+            position: relative;
+            z-index: 10;
         }
-
-        /* Анимация "парения" карточки вверх-вниз */
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
+        h1 { 
+            margin: 0; 
+            font-size: 18px; 
+            color: #fff; 
+            text-shadow: 0 0 10px var(--neon-blue); 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
         }
-
-        /* Стиль для названия роли */
-        .role-title {
-            color: #fff;
-            font-size: 28px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            /* Свечение текста (голубой неон) */
-            text-shadow: 0 0 10px #45a29e, 0 0 20px #45a29e;
-        }
-
-        /* Стиль для описания роли */
-        .role-description {
-            color: #c5c6c7;
+        
+        /* Таймер и статусы */
+        .status-bar {
             font-size: 14px;
-            line-height: 1.5;
-            margin-bottom: 25px;
-        }
-
-        /* Стиль для кнопки подтверждения */
-        .ready-btn {
-            background: transparent;
-            border: 2px solid #45a29e; /* Голубая рамка */
-            color: #fff;
-            padding: 12px 25px;
-            border-radius: 25px;
-            font-size: 14px;
+            color: var(--neon-blue);
+            margin-top: 5px;
             font-weight: bold;
+            transition: color 0.3s;
+        }
+        .status-bar.urgent {
+            color: var(--blood-red);
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { text-shadow: 0 0 5px var(--blood-red); }
+            50% { text-shadow: 0 0 15px var(--blood-red); }
+            100% { text-shadow: 0 0 5px var(--blood-red); }
+        }
+
+        /* Кнопка "Моя роль" в шапке */
+        .btn-role {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: transparent;
+            border: 1px solid var(--neon-purple);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        /* Кнопка запуска игры (только для Админа) */
+        #btn-start-game {
+            display: none; /* Изначально скрыта */
+            background: var(--neon-purple);
+            color: #fff;
+            border: none;
+            padding: 15px;
+            font-size: 16px;
+            font-family: 'Russo One', sans-serif;
             text-transform: uppercase;
             cursor: pointer;
-            transition: all 0.3s ease; /* Плавное изменение при наведении */
-            box-shadow: 0 0 10px rgba(69, 162, 158, 0.3);
+            box-shadow: 0 0 15px rgba(138, 43, 226, 0.5);
+            margin: 10px auto;
+            border-radius: 15px;
+            transition: 0.3s;
+            width: 90%;
+            text-align: center;
+        }
+        #btn-start-game:hover { 
+            background: var(--neon-blue); 
+            box-shadow: 0 0 20px rgba(69, 162, 158, 0.8); 
+            color: #000; 
         }
 
-        /* Эффект при наведении на кнопку */
-        .ready-btn:hover {
-            background: #45a29e; /* Кнопка заливается голубым */
-            color: #0b0c10;      /* Текст становится темным */
-            box-shadow: 0 0 20px rgba(69, 162, 158, 0.8); /* Усиливаем свечение */
+        /* Список игроков */
+        #players-list {
+            display: flex;
+            overflow-x: auto;
+            padding: 10px;
+            background: #11141c;
+            border-bottom: 1px solid #333;
+            gap: 10px;
+        }
+        .player-badge {
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-blue);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+        .player-badge.dead {
+            border-color: #555;
+            color: #555;
+            text-decoration: line-through;
+        }
+
+        /* Зона чата */
+        #chat-container {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .message {
+            background-color: var(--panel-bg);
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            word-wrap: break-word;
+            border-left: 3px solid var(--neon-blue);
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(5px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
+        .message.self {
+            align-self: flex-end;
+            background-color: #2b2b40;
+            border-left: none;
+            border-right: 3px solid var(--neon-purple);
+        }
+        .message span.author {
+            font-size: 12px;
+            color: var(--neon-blue);
+            display: block;
+            margin-bottom: 3px;
+            font-weight: bold;
+        }
+        .message.self span.author { color: var(--neon-purple); }
+
+        /* Ввод сообщений */
+        #input-area {
+            display: flex;
+            padding: 15px;
+            background-color: var(--panel-bg);
+            border-top: 1px solid #333;
+            z-index: 10;
+        }
+        input[type="text"] {
+            flex: 1;
+            background: #0b0c10;
+            border: 1px solid var(--neon-blue);
+            color: white;
+            padding: 12px;
+            border-radius: 20px;
+            outline: none;
+            transition: 0.3s;
+        }
+        input:focus { box-shadow: 0 0 10px rgba(69, 162, 158, 0.5); }
+        input:disabled { border-color: #555; background: #111; }
+        
+        button.send-btn {
+            background: transparent;
+            border: 2px solid var(--neon-purple);
+            color: white;
+            margin-left: 10px;
+            padding: 10px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+        button.send-btn:disabled { border-color: #555; color: #555; }
+
+        /* Панель игровых действий (голосование / ночь) */
+        #action-panel {
+            display: none;
+            flex-direction: column;
+            padding: 15px;
+            background: #1a1a2e;
+            border-top: 2px solid var(--neon-purple);
+            box-shadow: 0 -5px 15px rgba(138, 43, 226, 0.3);
+            z-index: 20;
+        }
+        #action-prompt {
+            text-align: center;
+            color: var(--neon-purple);
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .btn-target {
+            background: transparent;
+            border: 1px solid var(--neon-blue);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-target:active { background: var(--neon-blue); color: #000; }
+
+        /* ОБНОВЛЕННАЯ КАРТОЧКА РОЛИ С КРУТЫМ ДИЗАЙНОМ */
+        #role-modal {
+            display: none; 
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%); 
+            width: 85%;
+            max-width: 320px; 
+            background: linear-gradient(145deg, #11141c, #1a1a2e); 
+            border: 2px solid var(--neon-purple);
+            border-radius: 20px;
+            padding: 30px 20px;
+            box-sizing: border-box;
+            box-shadow: 0 0 30px rgba(138, 43, 226, 0.5), inset 0 0 15px rgba(69, 162, 158, 0.1);
+            z-index: 100;
+            text-align: center;
+            font-family: 'Montserrat', sans-serif; 
+        }
+        .role-game-title {
+            color: var(--neon-purple);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 4px; 
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        #role-modal h2 { 
+            margin: 0 0 15px 0; 
+            color: #ffffff; 
+            font-family: 'Russo One', sans-serif; 
+            font-size: 32px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-blue); 
+        }
+        #role-desc {
+            color: #c5c6c7;
+            font-size: 14px;
+            line-height: 1.6; 
+            margin-bottom: 30px;
+        }
+        .close-modal {
+            background: transparent;
+            border: 2px solid var(--neon-blue);
+            color: #ffffff;
+            padding: 12px 35px;
+            border-radius: 25px; 
+            font-size: 14px;
+            font-family: 'Russo One', sans-serif; 
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s ease; 
+            box-shadow: 0 0 10px rgba(69, 162, 158, 0.3);
+        }
+        .close-modal:hover, .close-modal:active {
+            background: var(--neon-blue);
+            color: #0b0c10;
+            box-shadow: 0 0 20px rgba(69, 162, 158, 0.8);
         }
     </style>
 </head>
 <body>
 
-    <!-- HTML-структура нашей карточки -->
-    <div class="role-card">
-        <div class="role-title">Мафия</div>
-        <div class="role-description">
-            Город засыпает. Твоя цель — устранить всех мирных драконов. Ночью выбирай жертву, а днем не выдавай себя.
-        </div>
-        <button class="ready-btn">Я готов</button>
+    <header>
+        <h1 id="room-title">Логово Мафии</h1>
+        <div class="status-bar" id="phase-status">Ожидание игроков...</div>
+        <button class="btn-role" onclick="toggleRoleModal()">Моя Роль</button>
+    </header>
+
+    <!-- Полоса со списком игроков -->
+    <div id="players-list"></div>
+    
+    <!-- Кнопка запуска для админа -->
+    <button id="btn-start-game">Начать игру (Админ)</button>
+
+    <!-- Карточка роли -->
+    <div id="role-modal">
+        <div class="role-game-title">Драконья мафия</div>
+        <h2 id="role-name">Загрузка...</h2>
+        <p id="role-desc">Ожидайте распределения ролей.</p>
+        <button class="close-modal" onclick="toggleRoleModal()">Я ГОТОВ</button>
     </div>
 
+    <!-- Чат -->
+    <div id="chat-container"></div>
+
+    <!-- Панель действий для ночи и голосования -->
+    <div id="action-panel">
+        <div id="action-prompt">Сделайте выбор:</div>
+        <div class="action-buttons" id="action-buttons-container"></div>
+    </div>
+
+    <!-- Поле ввода текста -->
+    <div id="input-area">
+        <input type="text" id="msg-input" placeholder="Написать сообщение..." autocomplete="off">
+        <button class="send-btn" id="send-btn" onclick="sendMessage()">Отправить</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand(); 
+        
+        // Надежное получение ID пользователя для починки чата
+        const userId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : String(Math.floor(Math.random() * 100000));
+        const user = tg.initDataUnsafe?.user || { first_name: "Игрок_" + userId.slice(-4) };
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Чтение ID комнаты. Работает и для старых ссылок, и для новых (Direct Link)
+        const roomId = tg.initDataUnsafe?.start_param || urlParams.get('room') || 'test';
+        
+        let currentPhase = "Ожидание";
+        let phaseTimeLeft = 0;
+        let timerInterval = null;
+        let isDead = false;
+
+        // Строка подключения к серверу
+        const wsUrl = `wss://599c4d87e8fafa.lhr.life/ws/mafia/${roomId}`;
+        const ws = new WebSocket(wsUrl);
+
+        const chatContainer = document.getElementById('chat-container');
+        const inputArea = document.getElementById('input-area');
+        const input = document.getElementById('msg-input');
+        const sendBtn = document.getElementById('send-btn');
+        const phaseStatus = document.getElementById('phase-status');
+        const actionPanel = document.getElementById('action-panel');
+        const actionButtonsContainer = document.getElementById('action-buttons-container');
+        const actionPrompt = document.getElementById('action-prompt');
+        const btnStartGame = document.getElementById('btn-start-game');
+
+        // При успешном соединении отправляем команду join
+        ws.onopen = () => {
+            ws.send(JSON.stringify({ action: "join", user_id: userId, name: user.first_name }));
+        };
+
+        // Обработка всех сообщений от сервера
+        ws.onmessage = (event) => {
+            const parsed = JSON.parse(event.data);
+            
+            if (parsed.event === "system") {
+                addSystemMessage(parsed.message);
+            } 
+            else if (parsed.event === "is_admin") {
+                btnStartGame.style.display = 'block'; // Показываем кнопку админу
+            }
+            else if (parsed.event === "update" && parsed.data.action === "chat") {
+                const isSelf = parsed.data.sender_id === userId;
+                addChatMessage(parsed.data.sender_name, parsed.data.text, isSelf);
+            }
+            else if (parsed.event === "update_players") {
+                renderPlayersList(parsed.players);
+                if (currentPhase === "Ожидание") {
+                    phaseStatus.innerText = `Подключено игроков: ${parsed.count}`;
+                }
+            }
+            else if (parsed.event === "role_assigned") {
+                document.getElementById('role-name').innerText = parsed.role;
+                document.getElementById('role-desc').innerText = parsed.description;
+                document.getElementById('role-modal').style.display = 'block'; 
+            }
+            else if (parsed.event === "phase_changed") {
+                currentPhase = parsed.phase;
+                phaseTimeLeft = parsed.duration;
+                btnStartGame.style.display = 'none'; 
+                actionPanel.style.display = "none"; 
+                inputArea.style.display = (currentPhase === "Ночь") ? "none" : "flex"; 
+                startTimer();
+                addSystemMessage(`Текущая фаза: ${currentPhase.toUpperCase()}`);
+            }
+            else if (parsed.event === "action_required") {
+                showActionPanel(parsed.prompt, parsed.options);
+            }
+            else if (parsed.event === "you_died") {
+                isDead = true;
+                input.disabled = true;
+                sendBtn.disabled = true;
+                input.placeholder = "Вы выбыли из игры.";
+                actionPanel.style.display = "none";
+                document.body.style.border = "4px solid var(--blood-red)";
+            }
+        };
+
+        // Команда серверу запустить игру
+        btnStartGame.onclick = () => {
+            ws.send(JSON.stringify({ action: "start_game", user_id: userId }));
+        };
+
+        // Отрисовка плашек с игроками
+        function renderPlayersList(players) {
+            const listDiv = document.getElementById('players-list');
+            listDiv.innerHTML = '';
+            players.forEach(p => {
+                const badge = document.createElement('div');
+                badge.className = `player-badge ${p.is_dead ? 'dead' : ''}`;
+                badge.innerText = p.name;
+                listDiv.appendChild(badge);
+            });
+        }
+
+        // Вывод панели с кнопками для голосования и действий ролей
+        function showActionPanel(promptText, options) {
+            if (isDead) return;
+            actionPrompt.innerText = promptText;
+            actionButtonsContainer.innerHTML = '';
+            
+            options.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.className = 'btn-target';
+                btn.innerText = opt;
+                btn.onclick = () => {
+                    ws.send(JSON.stringify({
+                        action: "player_choice",
+                        user_id: userId,
+                        target: opt
+                    }));
+                    actionPanel.style.display = "none"; // Прячем панель после выбора
+                };
+                actionButtonsContainer.appendChild(btn);
+            });
+            
+            actionPanel.style.display = "flex";
+        }
+
+        // Управление таймером фаз
+        function startTimer() {
+            clearInterval(timerInterval);
+            updatePhaseUI();
+            timerInterval = setInterval(() => {
+                phaseTimeLeft--;
+                if (phaseTimeLeft <= 0) clearInterval(timerInterval);
+                updatePhaseUI();
+            }, 1000);
+        }
+
+        function updatePhaseUI() {
+            phaseStatus.innerText = `${currentPhase} (Осталось: ${phaseTimeLeft} сек)`;
+            if (phaseTimeLeft <= 10 && phaseTimeLeft > 0) {
+                phaseStatus.classList.add('urgent');
+            } else {
+                phaseStatus.classList.remove('urgent');
+            }
+        }
+
+        function toggleRoleModal() {
+            const modal = document.getElementById('role-modal');
+            modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Отправка сообщений в чат
+        function sendMessage() {
+            if (isDead || currentPhase === "Ночь") return;
+            const text = input.value.trim();
+            if (text && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({
+                    action: "chat",
+                    user_id: userId,
+                    text: text
+                }));
+                input.value = '';
+            }
+        }
+
+        input.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Создание элементов чата
+        function addChatMessage(author, text, isSelf) {
+            const div = document.createElement('div');
+            div.className = `message ${isSelf ? 'self' : ''}`;
+            div.innerHTML = `<span class="author">${author}</span>${text}`;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function addSystemMessage(text) {
+            const div = document.createElement('div');
+            div.style.textAlign = "center";
+            div.style.color = "var(--neon-purple)";
+            div.style.fontSize = "12px";
+            div.style.margin = "10px 0";
+            div.style.textTransform = "uppercase";
+            div.style.letterSpacing = "1px";
+            div.innerText = text;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    </script>
 </body>
 </html>
