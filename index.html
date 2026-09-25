@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mafia: Night Fury Edition</title>
-    <!-- Подключение библиотеки Telegram -->
+    <!-- Подключение библиотеки Telegram для работы с окном приложения -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Подключение современных игровых шрифтов -->
+    <!-- Игровые шрифты -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Russo+One&display=swap" rel="stylesheet">
     <style>
-        /* Цветовая палитра */
+        /* Основная цветовая схема */
         :root {
             --bg-color: #0b0c10;
             --panel-bg: #1f2833;
@@ -32,6 +32,7 @@
             overflow: hidden;
         }
 
+        /* Верхняя панель */
         header {
             background: linear-gradient(90deg, #0b0c10 0%, #1a1a2e 50%, #0b0c10 100%);
             padding: 10px;
@@ -49,6 +50,8 @@
             text-transform: uppercase; 
             letter-spacing: 1px;
         }
+        
+        /* Таймер и статусы */
         .status-bar {
             font-size: 14px;
             color: var(--neon-blue);
@@ -65,6 +68,8 @@
             50% { text-shadow: 0 0 15px var(--blood-red); }
             100% { text-shadow: 0 0 5px var(--blood-red); }
         }
+
+        /* Кнопка "Моя роль" в шапке */
         .btn-role {
             position: absolute;
             top: 10px;
@@ -79,8 +84,9 @@
             text-transform: uppercase;
         }
 
+        /* Кнопка запуска игры (только для Админа) */
         #btn-start-game {
-            display: none; 
+            display: none; /* Изначально скрыта */
             background: var(--neon-purple);
             color: #fff;
             border: none;
@@ -96,8 +102,13 @@
             width: 90%;
             text-align: center;
         }
-        #btn-start-game:hover { background: var(--neon-blue); box-shadow: 0 0 20px rgba(69, 162, 158, 0.8); color: #000; }
+        #btn-start-game:hover { 
+            background: var(--neon-blue); 
+            box-shadow: 0 0 20px rgba(69, 162, 158, 0.8); 
+            color: #000; 
+        }
 
+        /* Список игроков */
         #players-list {
             display: flex;
             overflow-x: auto;
@@ -120,6 +131,7 @@
             text-decoration: line-through;
         }
 
+        /* Зона чата */
         #chat-container {
             flex: 1;
             padding: 15px;
@@ -137,8 +149,10 @@
             border-left: 3px solid var(--neon-blue);
             animation: fadeIn 0.3s ease-in-out;
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        
+        @keyframes fadeIn { 
+            from { opacity: 0; transform: translateY(5px); } 
+            to { opacity: 1; transform: translateY(0); } 
+        }
         .message.self {
             align-self: flex-end;
             background-color: #2b2b40;
@@ -154,6 +168,7 @@
         }
         .message.self span.author { color: var(--neon-purple); }
 
+        /* Ввод сообщений */
         #input-area {
             display: flex;
             padding: 15px;
@@ -187,6 +202,7 @@
         }
         button.send-btn:disabled { border-color: #555; color: #555; }
 
+        /* Панель игровых действий (голосование / ночь) */
         #action-panel {
             display: none;
             flex-direction: column;
@@ -220,6 +236,7 @@
         }
         .btn-target:active { background: var(--neon-blue); color: #000; }
 
+        /* Карточка Роли */
         #role-modal {
             display: none; 
             position: absolute;
@@ -290,10 +307,13 @@
         <button class="btn-role" onclick="toggleRoleModal()">Моя Роль</button>
     </header>
 
+    <!-- Полоса со списком игроков -->
     <div id="players-list"></div>
     
+    <!-- Кнопка запуска для админа -->
     <button id="btn-start-game">Начать игру (Админ)</button>
 
+    <!-- Карточка роли -->
     <div id="role-modal">
         <div class="role-game-title">Драконья мафия</div>
         <h2 id="role-name">Загрузка...</h2>
@@ -301,13 +321,16 @@
         <button class="close-modal" onclick="toggleRoleModal()">Я ГОТОВ</button>
     </div>
 
+    <!-- Чат -->
     <div id="chat-container"></div>
 
+    <!-- Панель действий для ночи и голосования -->
     <div id="action-panel">
         <div id="action-prompt">Сделайте выбор:</div>
         <div class="action-buttons" id="action-buttons-container"></div>
     </div>
 
+    <!-- Поле ввода текста -->
     <div id="input-area">
         <input type="text" id="msg-input" placeholder="Написать сообщение..." autocomplete="off">
         <button class="send-btn" id="send-btn" onclick="sendMessage()">Отправить</button>
@@ -317,9 +340,12 @@
         const tg = window.Telegram.WebApp;
         tg.expand(); 
         
+        // Получаем ID пользователя из Telegram
         const userId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : String(Math.floor(Math.random() * 100000));
         const user = tg.initDataUnsafe?.user || { first_name: "Игрок_" + userId.slice(-4) };
         const urlParams = new URLSearchParams(window.location.search);
+        
+        // Чтение ID комнаты. Работает и для старых ссылок, и для новых (Direct Link)
         const roomId = tg.initDataUnsafe?.start_param || urlParams.get('room') || 'test';
         
         let currentPhase = "Ожидание";
@@ -327,7 +353,7 @@
         let timerInterval = null;
         let isDead = false;
 
-        // ВАЖНО: Проверь этот адрес! Он должен вести на твой FastAPI сервер (VPS)
+        // Строка подключения к серверу (VPS). Оставлена твоя ссылка lhr.life
         const wsUrl = `wss://599c4d87e8fafa.lhr.life/ws/mafia/${roomId}`;
         const ws = new WebSocket(wsUrl);
 
@@ -341,10 +367,12 @@
         const actionPrompt = document.getElementById('action-prompt');
         const btnStartGame = document.getElementById('btn-start-game');
 
+        // При успешном соединении отправляем команду join
         ws.onopen = () => {
             ws.send(JSON.stringify({ action: "join", user_id: userId, name: user.first_name }));
         };
 
+        // Обработка всех сообщений от сервера
         ws.onmessage = (event) => {
             const parsed = JSON.parse(event.data);
             
@@ -352,7 +380,7 @@
                 addSystemMessage(parsed.message);
             } 
             else if (parsed.event === "is_admin") {
-                btnStartGame.style.display = 'block';
+                btnStartGame.style.display = 'block'; // Показываем кнопку админу
             }
             else if (parsed.event === "update" && parsed.data.action === "chat") {
                 const isSelf = parsed.data.sender_id === userId;
@@ -391,10 +419,12 @@
             }
         };
 
+        // Команда серверу запустить игру
         btnStartGame.onclick = () => {
             ws.send(JSON.stringify({ action: "start_game", user_id: userId }));
         };
 
+        // Отрисовка плашек с игроками
         function renderPlayersList(players) {
             const listDiv = document.getElementById('players-list');
             listDiv.innerHTML = '';
@@ -406,6 +436,7 @@
             });
         }
 
+        // Вывод панели с кнопками для голосования и действий ролей
         function showActionPanel(promptText, options) {
             if (isDead) return;
             actionPrompt.innerText = promptText;
@@ -421,7 +452,7 @@
                         user_id: userId,
                         target: opt
                     }));
-                    actionPanel.style.display = "none"; 
+                    actionPanel.style.display = "none"; // Прячем панель после выбора
                 };
                 actionButtonsContainer.appendChild(btn);
             });
@@ -429,6 +460,7 @@
             actionPanel.style.display = "flex";
         }
 
+        // Управление таймером фаз
         function startTimer() {
             clearInterval(timerInterval);
             updatePhaseUI();
@@ -453,6 +485,7 @@
             modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
         }
 
+        // Отправка сообщений в чат
         function sendMessage() {
             if (isDead || currentPhase === "Ночь") return;
             const text = input.value.trim();
@@ -470,6 +503,7 @@
             if (e.key === 'Enter') sendMessage();
         });
 
+        // Создание элементов чата
         function addChatMessage(author, text, isSelf) {
             const div = document.createElement('div');
             div.className = `message ${isSelf ? 'self' : ''}`;
