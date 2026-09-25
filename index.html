@@ -339,9 +339,10 @@
         const tg = window.Telegram.WebApp;
         tg.expand(); 
         
-        // Надежное получение ID пользователя для починки чата
+        // Надежное получение ID и username пользователя из Telegram
         const userId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : String(Math.floor(Math.random() * 100000));
         const user = tg.initDataUnsafe?.user || { first_name: "Игрок_" + userId.slice(-4) };
+        const username = tg.initDataUnsafe?.user?.username || "";
         const urlParams = new URLSearchParams(window.location.search);
         
         // Чтение ID комнаты. Работает и для старых ссылок, и для новых (Direct Link)
@@ -352,7 +353,7 @@
         let timerInterval = null;
         let isDead = false;
 
-        // Строка подключения к серверу
+        // Строка подключения к серверу (убедись, что адрес туннеля актуален!)
         const wsUrl = `wss://599c4d87e8fafa.lhr.life/ws/mafia/${roomId}`;
         const ws = new WebSocket(wsUrl);
 
@@ -366,9 +367,14 @@
         const actionPrompt = document.getElementById('action-prompt');
         const btnStartGame = document.getElementById('btn-start-game');
 
-        // При успешном соединении отправляем команду join
+        // При успешном соединении отправляем команду join и передаем username
         ws.onopen = () => {
-            ws.send(JSON.stringify({ action: "join", user_id: userId, name: user.first_name }));
+            ws.send(JSON.stringify({ 
+                action: "join", 
+                user_id: userId, 
+                name: user.first_name,
+                username: username
+            }));
         };
 
         // Обработка всех сообщений от сервера
