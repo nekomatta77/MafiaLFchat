@@ -5,10 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Mafia: Night Fury Edition</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Игровые шрифты (Russo One и Montserrat) -->
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&family=Russo+One&display=swap" rel="stylesheet">
     <style>
-        /* Основная цветовая схема */
         :root {
             --bg-color: #0b0c10;
             --panel-bg: #1f2833;
@@ -26,20 +24,28 @@
             padding: 0;
             display: flex;
             flex-direction: column;
+            /* Стабильная высота без прыжков при открытии клавиатуры */
             height: 100vh;
+            height: var(--tg-viewport-stable-height, 100vh);
             box-sizing: border-box;
             overflow: hidden;
+            transition: background-color 1.5s ease;
         }
 
-        /* Верхняя панель */
+        /* Эффект ночи */
+        body.night-mode {
+            --bg-color: #030406;
+            --panel-bg: #0d121a;
+        }
+
         header {
             background: linear-gradient(90deg, #0b0c10 0%, #1a1a2e 50%, #0b0c10 100%);
-            padding: 10px;
+            padding: 15px 10px;
             text-align: center;
             border-bottom: 2px solid var(--neon-purple);
-            box-shadow: 0 0 15px rgba(138, 43, 226, 0.4);
             position: relative;
             z-index: 10;
+            flex-shrink: 0; /* Чтобы не сжимался */
         }
         h1 { 
             margin: 0; 
@@ -50,7 +56,6 @@
             letter-spacing: 1px;
         }
         
-        /* Таймер и статусы */
         .status-bar {
             font-size: 14px;
             color: var(--neon-blue);
@@ -68,10 +73,9 @@
             100% { text-shadow: 0 0 5px var(--blood-red); }
         }
 
-        /* Кнопка "Моя роль" в шапке */
         .btn-role {
             position: absolute;
-            top: 10px;
+            top: 15px;
             right: 10px;
             background: transparent;
             border: 1px solid var(--neon-purple);
@@ -83,9 +87,8 @@
             text-transform: uppercase;
         }
 
-        /* Кнопка запуска игры (только для Админа) */
         #btn-start-game {
-            display: none; /* Изначально скрыта */
+            display: none;
             background: var(--neon-purple);
             color: #fff;
             border: none;
@@ -100,6 +103,7 @@
             transition: 0.3s;
             width: 90%;
             text-align: center;
+            flex-shrink: 0;
         }
         #btn-start-game:hover { 
             background: var(--neon-blue); 
@@ -107,30 +111,33 @@
             color: #000; 
         }
 
-        /* Список игроков */
         #players-list {
             display: flex;
             overflow-x: auto;
-            padding: 10px;
+            padding: 15px 10px; /* Исправлен баг со срезанным верхом плашек */
             background: #11141c;
             border-bottom: 1px solid #333;
             gap: 10px;
+            flex-shrink: 0;
+            align-items: center;
+            min-height: 35px;
         }
         .player-badge {
             background: var(--panel-bg);
             border: 1px solid var(--neon-blue);
-            padding: 5px 10px;
+            padding: 8px 12px;
             border-radius: 15px;
             font-size: 12px;
             white-space: nowrap;
+            transition: 0.3s;
         }
         .player-badge.dead {
             border-color: #555;
             color: #555;
             text-decoration: line-through;
+            opacity: 0.5;
         }
 
-        /* Зона чата */
         #chat-container {
             flex: 1;
             padding: 15px;
@@ -167,13 +174,13 @@
         }
         .message.self span.author { color: var(--neon-purple); }
 
-        /* Ввод сообщений */
         #input-area {
             display: flex;
             padding: 15px;
             background-color: var(--panel-bg);
             border-top: 1px solid #333;
             z-index: 10;
+            flex-shrink: 0;
         }
         input[type="text"] {
             flex: 1;
@@ -201,7 +208,6 @@
         }
         button.send-btn:disabled { border-color: #555; color: #555; }
 
-        /* Панель игровых действий (голосование / ночь) */
         #action-panel {
             display: none;
             flex-direction: column;
@@ -210,6 +216,7 @@
             border-top: 2px solid var(--neon-purple);
             box-shadow: 0 -5px 15px rgba(138, 43, 226, 0.3);
             z-index: 20;
+            flex-shrink: 0;
         }
         #action-prompt {
             text-align: center;
@@ -235,7 +242,6 @@
         }
         .btn-target:active { background: var(--neon-blue); color: #000; }
 
-        /* ОБНОВЛЕННАЯ КАРТОЧКА РОЛИ С КРУТЫМ ДИЗАЙНОМ */
         #role-modal {
             display: none; 
             position: absolute;
@@ -289,12 +295,30 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             transition: all 0.3s ease; 
-            box-shadow: 0 0 10px rgba(69, 162, 158, 0.3);
         }
-        .close-modal:hover, .close-modal:active {
-            background: var(--neon-blue);
-            color: #0b0c10;
-            box-shadow: 0 0 20px rgba(69, 162, 158, 0.8);
+        
+        /* Анимация смены фаз */
+        .phase-banner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Russo One', sans-serif;
+            font-size: 36px;
+            color: white;
+            text-transform: uppercase;
+            text-shadow: 0 0 20px var(--neon-blue);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 200;
+            text-align: center;
+            width: 100%;
+        }
+        @keyframes showPhase {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); text-shadow: 0 0 30px var(--neon-purple); }
+            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); text-shadow: 0 0 10px var(--neon-blue); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.2); }
         }
     </style>
 </head>
@@ -306,13 +330,9 @@
         <button class="btn-role" onclick="toggleRoleModal()">Моя Роль</button>
     </header>
 
-    <!-- Полоса со списком игроков -->
     <div id="players-list"></div>
-    
-    <!-- Кнопка запуска для админа -->
     <button id="btn-start-game">Начать игру (Админ)</button>
 
-    <!-- Карточка роли -->
     <div id="role-modal">
         <div class="role-game-title">Драконья мафия</div>
         <h2 id="role-name">Загрузка...</h2>
@@ -320,16 +340,13 @@
         <button class="close-modal" onclick="toggleRoleModal()">Я ГОТОВ</button>
     </div>
 
-    <!-- Чат -->
     <div id="chat-container"></div>
 
-    <!-- Панель действий для ночи и голосования -->
     <div id="action-panel">
         <div id="action-prompt">Сделайте выбор:</div>
         <div class="action-buttons" id="action-buttons-container"></div>
     </div>
 
-    <!-- Поле ввода текста -->
     <div id="input-area">
         <input type="text" id="msg-input" placeholder="Написать сообщение..." autocomplete="off">
         <button class="send-btn" id="send-btn" onclick="sendMessage()">Отправить</button>
@@ -338,22 +355,21 @@
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand(); 
+        tg.ready();
         
-        // Надежное получение ID и username пользователя из Telegram
         const userId = tg.initDataUnsafe?.user?.id ? String(tg.initDataUnsafe.user.id) : String(Math.floor(Math.random() * 100000));
         const user = tg.initDataUnsafe?.user || { first_name: "Игрок_" + userId.slice(-4) };
         const username = tg.initDataUnsafe?.user?.username || "";
         const urlParams = new URLSearchParams(window.location.search);
         
-        // Чтение ID комнаты. Работает и для старых ссылок, и для новых (Direct Link)
         const roomId = tg.initDataUnsafe?.start_param || urlParams.get('room') || 'test';
         
-        let currentPhase = "Ожидание";
+        let currentPhaseTitle = "Ожидание";
         let phaseTimeLeft = 0;
         let timerInterval = null;
         let isDead = false;
 
-        // Строка подключения к серверу (убедись, что адрес туннеля актуален!)
+        // ВАЖНО: Укажи здесь свою новую ссылку от localhost.run или сервера!
         const wsUrl = `wss://708e4272ad6907.lhr.life/ws/mafia/${roomId}`;
         const ws = new WebSocket(wsUrl);
 
@@ -367,7 +383,6 @@
         const actionPrompt = document.getElementById('action-prompt');
         const btnStartGame = document.getElementById('btn-start-game');
 
-        // При успешном соединении отправляем команду join и передаем username
         ws.onopen = () => {
             ws.send(JSON.stringify({ 
                 action: "join", 
@@ -377,7 +392,6 @@
             }));
         };
 
-        // Обработка всех сообщений от сервера
         ws.onmessage = (event) => {
             const parsed = JSON.parse(event.data);
             
@@ -385,7 +399,7 @@
                 addSystemMessage(parsed.message);
             } 
             else if (parsed.event === "is_admin") {
-                btnStartGame.style.display = 'block'; // Показываем кнопку админу
+                btnStartGame.style.display = 'block'; 
             }
             else if (parsed.event === "update" && parsed.data.action === "chat") {
                 const isSelf = parsed.data.sender_id === userId;
@@ -393,7 +407,7 @@
             }
             else if (parsed.event === "update_players") {
                 renderPlayersList(parsed.players);
-                if (currentPhase === "Ожидание") {
+                if (currentPhaseTitle === "Ожидание") {
                     phaseStatus.innerText = `Подключено игроков: ${parsed.count}`;
                 }
             }
@@ -403,13 +417,13 @@
                 document.getElementById('role-modal').style.display = 'block'; 
             }
             else if (parsed.event === "phase_changed") {
-                currentPhase = parsed.phase;
+                currentPhaseTitle = parsed.title; // Сервер теперь присылает красивое название (например "День 1: Знакомство")
                 phaseTimeLeft = parsed.duration;
                 btnStartGame.style.display = 'none'; 
                 actionPanel.style.display = "none"; 
-                inputArea.style.display = (currentPhase === "Ночь") ? "none" : "flex"; 
+                inputArea.style.display = (parsed.phase === "Ночь") ? "none" : "flex"; 
                 startTimer();
-                addSystemMessage(`Текущая фаза: ${currentPhase.toUpperCase()}`);
+                playAestheticTransition(parsed.phase, parsed.title);
             }
             else if (parsed.event === "action_required") {
                 showActionPanel(parsed.prompt, parsed.options);
@@ -424,12 +438,10 @@
             }
         };
 
-        // Команда серверу запустить игру
         btnStartGame.onclick = () => {
             ws.send(JSON.stringify({ action: "start_game", user_id: userId }));
         };
 
-        // Отрисовка плашек с игроками
         function renderPlayersList(players) {
             const listDiv = document.getElementById('players-list');
             listDiv.innerHTML = '';
@@ -441,7 +453,6 @@
             });
         }
 
-        // Вывод панели с кнопками для голосования и действий ролей
         function showActionPanel(promptText, options) {
             if (isDead) return;
             actionPrompt.innerText = promptText;
@@ -457,7 +468,8 @@
                         user_id: userId,
                         target: opt
                     }));
-                    actionPanel.style.display = "none"; // Прячем панель после выбора
+                    actionPanel.style.display = "none"; 
+                    addSystemMessage(`Вы выбрали: ${opt}`);
                 };
                 actionButtonsContainer.appendChild(btn);
             });
@@ -465,7 +477,6 @@
             actionPanel.style.display = "flex";
         }
 
-        // Управление таймером фаз
         function startTimer() {
             clearInterval(timerInterval);
             updatePhaseUI();
@@ -477,7 +488,7 @@
         }
 
         function updatePhaseUI() {
-            phaseStatus.innerText = `${currentPhase} (Осталось: ${phaseTimeLeft} сек)`;
+            phaseStatus.innerText = `${currentPhaseTitle} (Осталось: ${phaseTimeLeft} сек)`;
             if (phaseTimeLeft <= 10 && phaseTimeLeft > 0) {
                 phaseStatus.classList.add('urgent');
             } else {
@@ -485,14 +496,35 @@
             }
         }
 
+        function playAestheticTransition(phaseType, titleText) {
+            // Замена фона
+            if (phaseType === "Ночь") {
+                document.body.classList.add('night-mode');
+            } else {
+                document.body.classList.remove('night-mode');
+            }
+
+            // Всплывающий баннер
+            let banner = document.getElementById('phase-banner');
+            if(!banner) {
+                banner = document.createElement('div');
+                banner.id = 'phase-banner';
+                banner.className = 'phase-banner';
+                document.body.appendChild(banner);
+            }
+            banner.innerText = titleText.toUpperCase();
+            banner.style.animation = 'none';
+            void banner.offsetWidth; // перезапуск анимации
+            banner.style.animation = 'showPhase 3s ease forwards';
+        }
+
         function toggleRoleModal() {
             const modal = document.getElementById('role-modal');
             modal.style.display = modal.style.display === 'block' ? 'none' : 'block';
         }
 
-        // Отправка сообщений в чат
         function sendMessage() {
-            if (isDead || currentPhase === "Ночь") return;
+            if (isDead || currentPhaseTitle === "Ночь") return;
             const text = input.value.trim();
             if (text && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({
@@ -508,7 +540,6 @@
             if (e.key === 'Enter') sendMessage();
         });
 
-        // Создание элементов чата
         function addChatMessage(author, text, isSelf) {
             const div = document.createElement('div');
             div.className = `message ${isSelf ? 'self' : ''}`;
