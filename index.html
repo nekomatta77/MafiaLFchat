@@ -114,7 +114,7 @@
         #players-list {
             display: flex;
             overflow-x: auto;
-            padding: 15px 10px; /* Исправлен баг со срезанным верхом плашек */
+            padding: 15px 10px;
             background: #11141c;
             border-bottom: 1px solid #333;
             gap: 10px;
@@ -369,8 +369,8 @@
         let timerInterval = null;
         let isDead = false;
 
-        // ВАЖНО: Укажи здесь свою новую ссылку от localhost.run или сервера!
-        const wsUrl = `wss://708e4272ad6907.lhr.life/ws/mafia/${roomId}`;
+        // Обновленная рабочая ссылка на туннель:
+        const wsUrl = `wss://cbd9edd743387e.lhr.life/ws/mafia/${roomId}`;
         const ws = new WebSocket(wsUrl);
 
         const chatContainer = document.getElementById('chat-container');
@@ -417,7 +417,7 @@
                 document.getElementById('role-modal').style.display = 'block'; 
             }
             else if (parsed.event === "phase_changed") {
-                currentPhaseTitle = parsed.title; // Сервер теперь присылает красивое название (например "День 1: Знакомство")
+                currentPhaseTitle = parsed.title; 
                 phaseTimeLeft = parsed.duration;
                 btnStartGame.style.display = 'none'; 
                 actionPanel.style.display = "none"; 
@@ -497,14 +497,12 @@
         }
 
         function playAestheticTransition(phaseType, titleText) {
-            // Замена фона
             if (phaseType === "Ночь") {
                 document.body.classList.add('night-mode');
             } else {
                 document.body.classList.remove('night-mode');
             }
 
-            // Всплывающий баннер
             let banner = document.getElementById('phase-banner');
             if(!banner) {
                 banner = document.createElement('div');
@@ -514,7 +512,7 @@
             }
             banner.innerText = titleText.toUpperCase();
             banner.style.animation = 'none';
-            void banner.offsetWidth; // перезапуск анимации
+            void banner.offsetWidth; 
             banner.style.animation = 'showPhase 3s ease forwards';
         }
 
