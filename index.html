@@ -369,8 +369,8 @@
         let timerInterval = null;
         let isDead = false;
 
-        // Обновленная рабочая ссылка на туннель:
-        const wsUrl = `wss://cbd9edd743387e.lhr.life/ws/mafia/${roomId}`;
+        // ВАЖНО: Твоя ссылка от Pinggy. Работает 60 минут!
+        const wsUrl = `wss://cqiye-109-172-90-238.free.pinggy.net/ws/mafia/${roomId}`;
         const ws = new WebSocket(wsUrl);
 
         const chatContainer = document.getElementById('chat-container');
